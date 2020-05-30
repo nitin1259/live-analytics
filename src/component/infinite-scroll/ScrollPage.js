@@ -1,6 +1,17 @@
 import React, { useReducer, useEffect } from "react";
 
 function ScrollPage() {
+  const pageReducer = (state, action) => {
+    switch (action.type) {
+      case "ADVANCE_PAGE":
+        return { ...state, page: state.page + 1 };
+      default:
+        return state;
+    }
+  };
+
+  const [pager, pageDispatch] = useReducer(pageReducer, { page: 0 });
+
   const imgReducer = (state, action) => {
     switch (action.type) {
       case "STACK_IMAGES":
@@ -20,7 +31,7 @@ function ScrollPage() {
   // make api call
   useEffect(() => {
     imgDispatch({ type: "FETCHING_IMAGES", fetching: true });
-    fetch("https://picsum.photos/v2/list?page=0&limit=10")
+    fetch(`https://picsum.photos/v2/list?page=${pager.page}&limit=10`)
       .then((data) => data.json())
       .then((images) => {
         console.log(images);
@@ -32,7 +43,7 @@ function ScrollPage() {
         imgDispatch({ type: "FETCHING_IMAGES", fetching: false });
         return e;
       });
-  }, [imgDispatch]);
+  }, [imgDispatch, pager.page]);
 
   return (
     <div className="">
