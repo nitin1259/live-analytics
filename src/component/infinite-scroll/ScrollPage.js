@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from "react";
+import React, { useReducer, useEffect, useRef, useCallback } from "react";
 
 function ScrollPage() {
   const pageReducer = (state, action) => {
@@ -10,7 +10,7 @@ function ScrollPage() {
     }
   };
 
-  const [pager, pageDispatch] = useReducer(pageReducer, { page: 0 });
+  const [pager, pagerDispatch] = useReducer(pageReducer, { page: 0 });
 
   const imgReducer = (state, action) => {
     switch (action.type) {
@@ -45,6 +45,26 @@ function ScrollPage() {
       });
   }, [imgDispatch, pager.page]);
 
+  // implement infinite scrolling with intersection observer
+  let bottomBoundaryRef = useRef(null);
+  const scrollObserver = useCallback(
+    (node) => {
+      new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (en.intersectionRatio > 0) {
+            pagerDispatch({ type: "ADVANCE_PAGE" });
+          }
+        });
+      }).observe(node);
+    },
+    [pagerDispatch]
+  );
+  useEffect(() => {
+    if (bottomBoundaryRef.current) {
+      scrollObserver(bottomBoundaryRef.current);
+    }
+  }, [scrollObserver, bottomBoundaryRef]);
+
   return (
     <div className="">
       <nav className="navbar bg-light">
@@ -77,6 +97,16 @@ function ScrollPage() {
           })}
         </div>
       </div>
+      {imgData.fetching && (
+        <div className="text-center bg-secondary m-auto p-3">
+          <p className="m-0 text-white">Getting images</p>
+        </div>
+      )}
+      <div
+        id="page-bottom-boundary"
+        style={{ border: "1px solid red" }}
+        ref={bottomBoundaryRef}
+      ></div>
     </div>
   );
 }
